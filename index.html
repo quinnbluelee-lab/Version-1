@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大學伴入學考 - 沉浸式情境測驗</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+            --accent-color: #e67e22;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #quiz-container {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 25px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin: 0 0 10px 0;
+        }
+
+        .question-box {
+            display: none;
+        }
+
+        .question-box.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .options-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.4;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            background-color: #f0f7ff;
+            transform: scale(1.01);
+        }
+
+        #result-container {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.8s;
+        }
+
+        .result-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            background: #fdf2e9;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .result-desc {
+            text-align: left;
+            line-height: 1.8;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .start-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="start-screen" class="header">
+        <h1>【大學伴入學考】</h1>
+        <p>沉浸式情境測驗：如果是你，會怎麼做？</p>
+        <p style="font-size: 0.9rem; color: #666;">請根據你的直覺反應，選擇最接近你想法的選項</p>
+        <button class="start-btn" onclick="startQuiz()">開始測驗</button>
+    </div>
+
+    <div id="quiz-content" style="display:none;">
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="questions-area"></div>
+    </div>
+
+    <div id="result-container">
+        <div class="header">
+            <h1>🔮 測驗結果</h1>
+        </div>
+        <div class="result-score">總分加總：<span id="final-score"></span> 分</div>
+        <div id="role-tag" class="result-title"></div>
+        <div id="role-description" class="result-desc"></div>
+        <button class="start-btn" onclick="location.reload()">重新測驗</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            tag: "1. 【換位思考】",
+            q: "孩子今天一直分心，甚至對你愛理不理，這已經是連續第二週了。你的第一反應是？",
+            options: [
+                { text: "停下課本，溫和地說：「我看你今天好像很累，是不是發生什麼事讓你沒精神？」", score: 4 },
+                { text: "先簡單關心，如果孩子不想說，就稍微縮減內容，改聊他感興趣的話題。", score: 3 },
+                { text: "雖然覺得有點受挫，但還是會試著講笑話吸引他的注意，想辦法回到課本。", score: 2 },
+                { text: "覺得孩子沒禮貌，嚴肅提醒他上課應有的態度，並堅持把原定進度講完。", score: 1 }
+            ]
+        },
+        {
+            tag: "2. 【韌性陪伴】",
+            q: "一個簡單的數學公式，你換了三種說法孩子還是聽不懂，眼神開始放空。你會......",
+            options: [
+                { text: "覺得這是一個有趣的挑戰，立刻動手畫圖或用食物舉例，嘗試第四種教法。", score: 4 },
+                { text: "深呼吸，告訴孩子：「沒關係，這本來就很難，我們再慢慢試一次。」", score: 3 },
+                { text: "雖然很有耐心，但內心開始懷疑自己的教法，語氣也變得有些平板與無奈。", score: 2 },
+                { text: "內心感到煩躁，認為孩子可能基礎太差，決定直接跳過這題教下一頁。", score: 1 }
+            ]
+        },
+        {
+            tag: "3. 【動態調整】",
+            q: "原本準備了精彩的簡報，但孩子突然說他今天學校小考壓力很大，完全不想看教材。你會......",
+            options: [
+                { text: "彈性極大，立刻把簡報關掉，改用聊天或畫畫的方式來複習今天的關鍵字。", score: 4 },
+                { text: "先花 15 分鐘聽他訴苦，等他情緒穩定後，再挑選最簡單的部分教一點點。", score: 3 },
+                { text: "雖然同意聊天，但心裡一直掛念著進度，會不斷試圖把話題繞回課本內容。", score: 2 },
+                { text: "告訴孩子：「考完試就過去了，我們還是要照進度走，不然下週會教不完。」", score: 1 }
+            ]
+        },
+        {
+            tag: "4. 【正向驅動】",
+            q: "孩子雖然作業寫錯很多，但這次他竟然主動上傳了作業，沒有漏掉。你會......",
+            options: [
+                { text: "大力稱讚：「我發現你這週超準時交作業，這是一個很棒的進步喔！」", score: 4 },
+                { text: "簡單肯定他的努力，接著開始針對寫錯的部分進行訂正與講解。", score: 3 },
+                { text: "快速帶過稱讚，把重點放在告訴他哪幾題錯了、應該怎麼訂正才對。", score: 2 },
+                { text: "直接忽略準時交這件事，皺著眉頭說：「怎麼錯這麼多？你有認真寫嗎？」", score: 1 }
+            ]
+        },
+        {
+            tag: "5. 【備課熱忱】",
+            q: "下週要教「環境保護」，你目前的備課狀態是？",
+            options: [
+                { text: "興奮地找了相關的新聞影片或互動網頁，想讓孩子覺得這門課超好玩。", score: 4 },
+                { text: "認真把教材讀過兩遍，並思考孩子可能會在哪裡卡住，預先準備解釋方法。", score: 3 },
+                { text: "覺得官方提供的教材已經夠用了，稍微看過一遍，確保自己講得出來就好。", score: 2 },
+                { text: "打算上課前 5 分鐘再看，覺得自己程度應付國小/國中內容綽綽有餘。", score: 1 }
+            ]
+        },
+        {
+            tag: "6. 【數位應用】",
+            q: "計畫推薦使用線上互動白板（如 Miro 或 Padlet），但你從來沒用過。你會......",
+            options: [
+                { text: "覺得很有趣，立刻找教學影片自學，並試著把下週的內容做成互動關卡。", score: 4 },
+                { text: "願意花一點時間研究，只要能讓教學更生動，學點新工具沒問題。", score: 3 },
+                { text: "覺得有點麻煩，如果計畫沒強制要求，我傾向用最基本的螢幕分享就好。", score: 2 },
+                { text: "對數位工具感到抗拒，認為教學的重點是內容，不需要這些花俏的包裝。", score: 1 }
+            ]
+        },
+        {
+            tag: "7. 【極致自律】",
+            q: "期末考週到了，你非常忙碌，但明天就是跟孩子約定上課的日子。你會......",
+            options: [
+                { text: "早在一週前就預留好時間並備完課，絕不因為自己的私事影響孩子。", score: 4 },
+                { text: "雖然很累，還是會犧牲一點睡眠時間把教材做完，堅持履行承諾。", score: 3 },
+                { text: "會匆忙準備一下，但教學品質可能明顯下降，心裡覺得這也是沒辦法的事。", score: 2 },
+                { text: "會跟計畫請假或是臨時取消，認為自己的課業理所當然比學伴計畫重要。", score: 1 }
+            ]
+        },
+        {
+            tag: "8. 【反思習慣】",
+            q: "結束教學後，你的習慣通常是？",
+            options: [
+                { text: "迫不及待寫下記錄，反思今天哪種教法有效、哪種無效，並記錄孩子的變化。", score: 4 },
+                { text: "雖然覺得寫記錄有點累，但會認真回想細節，當作是自己跟孩子的成長日記。", score: 3 },
+                { text: "隨便寫兩句交代一下進度（例如：教完第三單元），當作是完成一項作業。", score: 2 },
+                { text: "關掉電腦後就完全不想這件事，覺得教完就是解脫，記錄只是形式。", score: 1 }
+            ]
+        },
+        {
+            tag: "9. 【主動解難】",
+            q: "孩子對你說話很不客氣，甚至有點挑釁，讓你感到有些受傷與無力。你會......",
+            options: [
+                { text: "主動聯繫學伴組長或在社群尋求建議，想知道如何處理這類情緒問題。", score: 4 },
+                { text: "自己上網查資料或找朋友聊聊，試圖從中找到改善溝通的方法。", score: 3 },
+                { text: "悶在心裡，心裡雖然難受，但打算下次上課時冷處理，看他會不會好一點。", score: 2 },
+                { text: "覺得這孩子沒救了，並開始考慮退出計畫，認為這不是我能處理的。", score: 1 }
+            ]
+        },
+        {
+            tag: "10. 【長程思維】",
+            q: "教了兩個月，孩子的小考成績反而退步了。",
+            options: [
+                { text: "雖然沮喪但能平復，認為陪伴的重點是信任感的建立，成績並非唯一標準。", score: 4 },
+                { text: "告訴自己改變需要時間，成績起伏很正常，繼續穩定地給予陪伴與支持。", score: 3 },
+                { text: "開始感到焦慮，覺得自己可能教得很爛，這份自我懷疑開始影響上課氣氛。", score: 2 },
+                { text: "覺得非常失敗，認為這兩個月都在浪費時間，產生強烈的挫折與無力感。", score: 1 }
+            ]
+        },
+        {
+            tag: "11. 【價值共鳴】",
+            q: "身邊的朋友問你：「花這麼多時間當免費學伴值得嗎？」你的內心 OS 是？",
+            options: [
+                { text: "「超級值得！這不僅是幫助孩子，也是我在學習如何影響另一個生命。」", score: 4 },
+                { text: "「很有意義啊，雖然有時候會累，但這份責任感讓我覺得很有成就感。」", score: 3 },
+                { text: "「就當作是刷履歷或累積經驗，反正有空就做，沒空就算了。」", score: 2 },
+                { text: "「老實說有時候也覺得後悔，早知道拿這時間去打工賺錢還比較實際。」", score: 1 }
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let totalScore = 0;
+
+    function startQuiz() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-content').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const area = document.getElementById('questions-area');
+        const qData = questions[currentQuestionIndex];
+        
+        // 更新進度條
+        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+
+        let html = `
+            <div class="question-box active">
+                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:5px;">${qData.tag}</div>
+                <div class="question-text">${qData.q}</div>
+                <div class="options-list">
+                    ${qData.options.map((opt, i) => `
+                        <button class="option-btn" onclick="nextQuestion(${opt.score})">
+                            ${opt.text}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        area.innerHTML = html;
+    }
+
+    function nextQuestion(score) {
+        totalScore += score;
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-content').style.display = 'none';
+        document.getElementById('result-container').style.display = 'block';
+        document.getElementById('final-score').innerText = totalScore;
+
+        const roleTag = document.getElementById('role-tag');
+        const roleDesc = document.getElementById('role-description');
+
+        if (totalScore >= 38) {
+            roleTag.innerText = "【金級領航員】";
+            roleDesc.innerText = "你具備無可挑剔的特質！你的同理心與自律簡直是學伴界的模範。孩子遇到你，就像抽到了大獎，請一定要把這份光芒帶進計畫裡！你非常適合擔任大學伴，能為孩子帶來長遠的正向影響。";
+        } else if (totalScore >= 30) {
+            roleTag.innerText = "【暖心守護者】";
+            roleDesc.innerText = "你具備非常穩定的陪伴能力。你很溫暖且負責任，是孩子最需要的心理支柱。只要保持這份初心，你將會與孩子一起創造一段美好的回憶。你相當適合擔任大學伴，你的陪伴將是孩子成長的動力。";
+        } else if (totalScore >= 20) {
+            roleTag.innerText = "【潛力實習生】";
+            roleDesc.innerText = "你已經具備了學伴的雛形！雖然在應變或自律上還有點挑戰，但只要你願意開放心胸、多方學習，你也能成為一名出色的引路人。你具備擔任大學伴的基礎，建議參與培訓來加強應對能力。";
+        } else {
+            roleTag.innerText = "【自由觀光客】";
+            roleDesc.innerText = "目前你的生活節奏與價值觀似乎與學伴計畫的「高承諾」有所落差。建議再多了解計畫內容，確認自己是否真的準備好承擔這份責任喔！目前的狀態可能較難勝任大學伴的長期需求，建議先從短期活動嘗試。";
+        }
+    }
+</script>
+
+</body>
+</html>
